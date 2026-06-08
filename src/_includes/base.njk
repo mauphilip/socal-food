@@ -39,7 +39,16 @@
 
   <!-- ── Footer ── -->
   <footer class="site-footer">
-    © {{ site.title }} · Powered by <a href="https://www.yelp.com" target="_blank" rel="noopener">Yelp</a>
+    <div class="site-footer-inner">
+      <div class="site-footer-brand">socal<span>.food</span></div>
+      <div class="site-footer-links">
+        {% for c in site.cities %}
+        <a href="/{{ c.slug }}/">{{ c.label }}</a>
+        {% endfor %}
+        <a href="/cms">Write</a>
+      </div>
+      <div class="site-footer-copy">© 2026 socal.food · Data from <a href="https://www.yelp.com" target="_blank" rel="noopener">Yelp</a></div>
+    </div>
   </footer>
 
 </div>

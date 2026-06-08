@@ -3,6 +3,15 @@
 
 {% block content %}
 
+<!-- ── Breadcrumb ── -->
+<nav class="page-breadcrumb" aria-label="Breadcrumb">
+  <a href="/">Home</a>
+  <span class="bc-sep">›</span>
+  <a href="/{{ city }}/">{{ city | cityLabel }}</a>
+  <span class="bc-sep">›</span>
+  <span class="bc-current">{{ title }}</span>
+</nav>
+
 <!-- ── Guide Hero ── -->
 {% if hero %}
 <div class="hero">
@@ -28,22 +37,28 @@
   <div class="guide-list" id="guide-list">
 
     {% if not hero %}
-    <div class="guide-header">
-      <div class="guide-eyebrow">{{ city | cityLabel }} · Guide</div>
-      <h1 class="guide-title">{{ title }}</h1>
-      <div class="guide-meta">
-        <span>By {{ author or site.author }}</span>
-        <span>·</span>
-        <time datetime="{{ page.date | isoDate }}">{{ page.date | readableDate }}</time>
-        {% if entries %}<span>·</span><span>{{ entries | length }} spots</span>{% endif %}
+    <div class="guide-header-row">
+      <div class="guide-header-text">
+        <div class="guide-eyebrow">{{ city | cityLabel }} · Guide</div>
+        <h1 class="guide-title">{{ title }}</h1>
+        <div class="guide-meta">
+          <span>By {{ author or site.author }}</span>
+          <span>·</span>
+          <time datetime="{{ page.date | isoDate }}">{{ page.date | readableDate }}</time>
+          {% if entries %}<span class="guide-spots-count">{{ entries | length }} spots</span>{% endif %}
+        </div>
+        {% if lede %}<p class="guide-lede">{{ lede }}</p>{% endif %}
       </div>
-      {% if lede %}<p class="guide-lede">{{ lede }}</p>{% endif %}
+      {% if entries %}
+      <button class="guide-map-pill active" id="guide-map-pill-btn">🗺 Map</button>
+      {% endif %}
     </div>
     {% endif %}
 
     {% if entries %}
     <!-- Quick-jump number strip -->
     <div class="quick-jump" id="quick-jump" aria-label="Jump to entry">
+      <span class="quick-jump-label">Jump</span>
       {% for entry in entries %}
       <button class="quick-jump-num" data-target="entry-{{ entry.rank }}" aria-label="Jump to #{{ entry.rank }}">{{ entry.rank }}</button>
       {% endfor %}
@@ -144,6 +159,7 @@ let mapInited = false
 let mapVisible = false
 const panel = document.getElementById('guide-map-panel')
 const toggleBtn = document.getElementById('guide-map-toggle')
+const pillBtn = document.getElementById('guide-map-pill-btn')
 let leafMap = null
 
 function ensureMap() {
@@ -164,6 +180,7 @@ function openMap() {
   panel.classList.add('mobile-open')
   toggleBtn.classList.add('map-open')
   toggleBtn.textContent = '✕ Close map'
+  if (pillBtn) { pillBtn.classList.add('active'); pillBtn.textContent = '🗺 Hide map' }
   ensureMap()
   setTimeout(() => leafMap?.invalidateSize(), 200)
 }
@@ -173,6 +190,7 @@ function closeMap() {
   panel.classList.add('collapsed')
   toggleBtn.classList.remove('map-open')
   toggleBtn.textContent = '🗺 Map'
+  if (pillBtn) { pillBtn.classList.remove('active'); pillBtn.textContent = '🗺 Map' }
 }
 
 // Desktop: map open by default
@@ -187,6 +205,7 @@ applyDesktopMap()
 window.addEventListener('resize', applyDesktopMap)
 
 toggleBtn.addEventListener('click', () => mapVisible ? closeMap() : openMap())
+if (pillBtn) pillBtn.addEventListener('click', () => mapVisible ? closeMap() : openMap())
 
 // ── Quick-jump strip ───────────────────────────────────────────
 const jumpBtns = document.querySelectorAll('.quick-jump-num')

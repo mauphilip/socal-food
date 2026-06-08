@@ -5,8 +5,19 @@ city: la
 {% extends "base.njk" %}
 
 {% block content %}
+
+<div class="city-hero">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div class="city-hero-label">City Guide</div>
+    <h1 class="city-hero-title">Los Angeles</h1>
+    <p class="city-hero-sub">Guides, top lists, and weekly picks from across LA.</p>
+  </div>
+</div>
+
 <div class="home-section">
-  <div class="home-section-title">LA Guides</div>
+  <div class="home-section-header">
+    <div class="home-section-title">Guides</div>
+  </div>
   {% if collections.la_guides.length %}
   <div class="content-grid">
     {% for post in collections.la_guides %}
@@ -21,12 +32,14 @@ city: la
     {% endfor %}
   </div>
   {% else %}
-  <p style="color:var(--text-muted);font-size:.9rem;">No guides yet — check back soon.</p>
+  <p style="color:var(--text-muted);font-size:.9rem;padding:.5rem 0;">No guides yet — check back soon.</p>
   {% endif %}
 </div>
 
 <div class="home-section">
-  <div class="home-section-title">LA Posts</div>
+  <div class="home-section-header">
+    <div class="home-section-title">Posts</div>
+  </div>
   {% if collections.la_posts.length %}
   <div class="content-grid">
     {% for post in collections.la_posts %}
@@ -41,7 +54,8 @@ city: la
     {% endfor %}
   </div>
   {% else %}
-  <p style="color:var(--text-muted);font-size:.9rem;">No posts yet.</p>
+  <p style="color:var(--text-muted);font-size:.9rem;padding:.5rem 0;">No posts yet.</p>
   {% endif %}
 </div>
+
 {% endblock %}

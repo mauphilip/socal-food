@@ -2,34 +2,41 @@
 
 {% block content %}
 {% set featured = collections.la_guides[0] %}
-{% set recentGuides = collections.la_guides | slice(0, 4) %}
+{% set recentGuides = collections.la_guides | slice(1, 4) %}
 {% set recentPosts = collections.la_posts | slice(0, 6) %}
 
-<!-- Featured guide -->
+<!-- ── Featured hero ── -->
 {% if featured %}
-<div class="home-section">
-  <div class="home-section-title">Featured</div>
-  <a class="content-card featured" href="{{ featured.url }}">
-    {% if featured.data.hero %}
-    <img class="content-card-img tall" src="{{ featured.data.hero }}" alt="{{ featured.data.title }}">
-    {% endif %}
-    <div class="content-card-body">
-      <div class="content-card-eyebrow">{{ featured.data.city | cityLabel }} · Guide</div>
-      <div class="content-card-title">{{ featured.data.title }}</div>
-      {% if featured.data.lede %}<div class="content-card-lede">{{ featured.data.lede }}</div>{% endif %}
-      <div class="content-card-meta">{{ featured.date | readableDate }} · By {{ featured.data.author or site.author }}</div>
+<a class="home-hero" href="{{ featured.url }}" aria-label="{{ featured.data.title }}">
+  {% if featured.data.hero %}
+  <img class="home-hero-img" src="{{ featured.data.hero }}" alt="{{ featured.data.title }}">
+  {% endif %}
+  <div class="home-hero-overlay"></div>
+  <div class="home-hero-inner">
+    <div class="home-hero-eyebrow">
+      <span class="label">Guide</span>
+      <span>{{ featured.data.city | cityLabel }}</span>
+      <span>·</span>
+      <span>{{ featured.date | readableDate }}</span>
     </div>
-  </a>
-</div>
+    <h2 class="home-hero-title">{{ featured.data.title }}</h2>
+    {% if featured.data.lede %}
+    <p class="home-hero-lede">{{ featured.data.lede }}</p>
+    {% endif %}
+    <span class="home-hero-cta">Read the guide →</span>
+  </div>
+</a>
 {% endif %}
 
-<!-- Recent guides -->
-{% if recentGuides.length > 1 %}
+<!-- ── More guides ── -->
+{% if recentGuides.length %}
 <div class="home-section">
-  <div class="home-section-title">Guides</div>
+  <div class="home-section-header">
+    <div class="home-section-title">Guides</div>
+    <a class="home-section-all" href="/la/">See all →</a>
+  </div>
   <div class="content-grid">
     {% for post in recentGuides %}
-    {% if not loop.first %}
     <a class="content-card" href="{{ post.url }}">
       {% if post.data.hero %}<img class="content-card-img" src="{{ post.data.hero }}" alt="{{ post.data.title }}">{% endif %}
       <div class="content-card-body">
@@ -39,16 +46,18 @@
         <div class="content-card-meta">{{ post.date | readableDate }}</div>
       </div>
     </a>
-    {% endif %}
     {% endfor %}
   </div>
 </div>
 {% endif %}
 
-<!-- Recent posts -->
+<!-- ── Recent posts ── -->
 {% if recentPosts.length %}
 <div class="home-section">
-  <div class="home-section-title">Posts</div>
+  <div class="home-section-header">
+    <div class="home-section-title">Posts</div>
+    <a class="home-section-all" href="/la/">See all →</a>
+  </div>
   <div class="content-grid">
     {% for post in recentPosts %}
     <a class="content-card" href="{{ post.url }}">
@@ -63,4 +72,5 @@
   </div>
 </div>
 {% endif %}
+
 {% endblock %}

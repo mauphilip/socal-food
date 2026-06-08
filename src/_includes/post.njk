@@ -2,6 +2,15 @@
 
 {% block content %}
 
+<!-- ── Breadcrumb ── -->
+<nav class="page-breadcrumb" aria-label="Breadcrumb">
+  <a href="/">Home</a>
+  <span class="bc-sep">›</span>
+  <a href="/{{ city }}/">{{ city | cityLabel }}</a>
+  <span class="bc-sep">›</span>
+  <span class="bc-current">{{ title }}</span>
+</nav>
+
 <!-- Hero -->
 {% if hero %}
 <div class="hero">
