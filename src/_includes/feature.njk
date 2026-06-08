@@ -1,0 +1,40 @@
+{% extends "base.njk" %}
+
+{% block content %}
+
+{% if hero %}
+<div class="hero">
+  <img class="hero-img" src="{{ hero }}" alt="{{ title }}">
+  <div class="hero-overlay"></div>
+  <div class="hero-text">
+    <div class="hero-eyebrow">
+      <span>{{ city | cityLabel }}</span>
+      <span>·</span>
+      <span>{{ date | readableDate }}</span>
+    </div>
+    <h1 class="hero-title">{{ title }}</h1>
+    {% if lede %}<p class="hero-lede">{{ lede }}</p>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="feature-wrap">
+
+  {% if not hero %}
+  <div class="post-eyebrow" style="margin-bottom:.5rem;">
+    <span>{{ city | cityLabel }}</span>
+    <span>·</span>
+    <span>{{ date | readableDate }}</span>
+  </div>
+  <h1 class="feature-title">{{ title }}</h1>
+  {% if lede %}<p class="post-lede">{{ lede }}</p>{% endif %}
+  <p class="post-meta" style="margin-bottom:2rem;">By {{ author or site.author }}</p>
+  {% endif %}
+
+  <div class="feature-body">
+    {{ content | safe }}
+  </div>
+
+</div>
+
+{% endblock %}

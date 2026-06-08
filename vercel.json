@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "_site",
+  "framework": null,
+  "routes": [
+    { "src": "/cms", "dest": "/cms.html" },
+    { "src": "/api/(.*)", "headers": { "Cache-Control": "no-store" } }
+  ]
+}

@@ -1,0 +1,273 @@
+{% extends "base.njk" %}
+{% set useLeaflet = true %}
+
+{% block content %}
+
+<!-- ── Guide Hero ── -->
+{% if hero %}
+<div class="hero">
+  <img class="hero-img" src="{{ hero }}" alt="{{ title }}">
+  <div class="hero-overlay"></div>
+  <div class="hero-text">
+    <div class="hero-eyebrow">
+      <span>{{ city | cityLabel }}</span>
+      <span>·</span>
+      <span>Guide</span>
+      {% if entries %}<span>· {{ entries | length }} spots</span>{% endif %}
+    </div>
+    <h1 class="hero-title">{{ title }}</h1>
+    {% if lede %}<p class="hero-lede">{{ lede }}</p>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Guide body: list + sticky map ── -->
+<div class="guide-wrap">
+
+  <!-- List pane -->
+  <div class="guide-list" id="guide-list">
+
+    {% if not hero %}
+    <div class="guide-header">
+      <div class="guide-eyebrow">{{ city | cityLabel }} · Guide</div>
+      <h1 class="guide-title">{{ title }}</h1>
+      <div class="guide-meta">
+        <span>By {{ author or site.author }}</span>
+        <span>·</span>
+        <time datetime="{{ page.date | isoDate }}">{{ page.date | readableDate }}</time>
+        {% if entries %}<span>·</span><span>{{ entries | length }} spots</span>{% endif %}
+      </div>
+      {% if lede %}<p class="guide-lede">{{ lede }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if entries %}
+    <!-- Quick-jump number strip -->
+    <div class="quick-jump" id="quick-jump" aria-label="Jump to entry">
+      {% for entry in entries %}
+      <button class="quick-jump-num" data-target="entry-{{ entry.rank }}" aria-label="Jump to #{{ entry.rank }}">{{ entry.rank }}</button>
+      {% endfor %}
+    </div>
+
+    <!-- Entries -->
+    {% for entry in entries %}
+    <article class="guide-entry" id="entry-{{ entry.rank }}"
+      data-entry-rank="{{ entry.rank }}"
+      data-entry-id="{{ entry.yelp_id or entry.name | lower | replace(' ', '-') }}"
+      data-lat="{{ entry.lat }}" data-lng="{{ entry.lng }}">
+
+      <div class="entry-rank">{{ entry.rank }}</div>
+      <h2 class="entry-name">
+        {% if entry.yelp_url %}
+        <a href="{{ entry.yelp_url }}" target="_blank" rel="noopener">{{ entry.name }}</a>
+        {% else %}
+        {{ entry.name }}
+        {% endif %}
+      </h2>
+
+      <div class="entry-meta">
+        {% if entry.neighborhood %}<span>{{ entry.neighborhood }}</span>{% endif %}
+        {% if entry.price %}<span class="sep">·</span><span class="price">{{ entry.price }}</span>{% endif %}
+        {% if entry.category %}<span class="sep">·</span><span>{{ entry.category }}</span>{% endif %}
+        {% if entry.rating %}<span class="sep">·</span><span class="rating">★ {{ entry.rating }}</span>{% endif %}
+        {% if entry.address %}
+        <span class="sep">·</span>
+        <a href="https://www.google.com/maps/dir/?api=1&destination={{ entry.address | urlencode }}" target="_blank" rel="noopener">📍 Directions</a>
+        {% endif %}
+      </div>
+
+      {% if entry.hero_image %}
+      <img class="entry-photo" src="{{ entry.hero_image }}" alt="{{ entry.name }}" loading="lazy">
+      {% endif %}
+
+      <div class="entry-tags-row">
+        {% if entry.perfect_for %}
+          {% for tag in entry.perfect_for %}
+          <span class="entry-pill perfect">{{ tag }}</span>
+          {% endfor %}
+        {% endif %}
+        {% if entry.must_order %}
+          {% for dish in entry.must_order %}
+          <span class="entry-pill must">{{ dish }}</span>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      {% if entry.review %}
+      <p class="entry-review">{{ entry.review }}</p>
+      {% endif %}
+
+      {{ content | safe if loop.first and not hero }}
+
+    </article>
+    {% endfor %}
+
+    {% else %}
+    <!-- Freeform markdown body (no structured entries) -->
+    <div style="max-width:640px;padding:2rem 2rem 5rem;">
+      {{ content | safe }}
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Map pane -->
+  <div class="guide-map-panel" id="guide-map-panel">
+    <div id="guide-map"></div>
+  </div>
+
+</div>
+
+<!-- Mobile map toggle -->
+<button class="guide-map-toggle" id="guide-map-toggle" aria-label="Toggle map">
+  🗺 Map
+</button>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+import { initMap, renderMarkers, highlightMarker, panToMarker } from '/map.js'
+
+// ── Collect entry data from DOM ────────────────────────────────
+const entries = [...document.querySelectorAll('.guide-entry')].map(el => ({
+  id: el.dataset.entryId,
+  rank: parseInt(el.dataset.entryRank),
+  lat: parseFloat(el.dataset.lat),
+  lng: parseFloat(el.dataset.lng),
+  _num: parseInt(el.dataset.entryRank),
+  name: el.querySelector('.entry-name')?.textContent?.trim() || '',
+})).filter(e => e.lat && e.lng)
+
+// ── Map init ───────────────────────────────────────────────────
+let mapInited = false
+let mapVisible = false
+const panel = document.getElementById('guide-map-panel')
+const toggleBtn = document.getElementById('guide-map-toggle')
+let leafMap = null
+
+function ensureMap() {
+  if (mapInited) return
+  mapInited = true
+  leafMap = initMap('guide-map')
+  if (entries.length) {
+    renderMarkers(entries, id => {
+      const el = document.querySelector(`.guide-entry[data-entry-id="${id}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+}
+
+function openMap() {
+  mapVisible = true
+  panel.classList.remove('collapsed')
+  panel.classList.add('mobile-open')
+  toggleBtn.classList.add('map-open')
+  toggleBtn.textContent = '✕ Close map'
+  ensureMap()
+  setTimeout(() => leafMap?.invalidateSize(), 200)
+}
+function closeMap() {
+  mapVisible = false
+  panel.classList.remove('mobile-open')
+  panel.classList.add('collapsed')
+  toggleBtn.classList.remove('map-open')
+  toggleBtn.textContent = '🗺 Map'
+}
+
+// Desktop: map open by default
+function applyDesktopMap() {
+  if (window.innerWidth >= 769 && entries.length) {
+    panel.classList.remove('collapsed', 'mobile-open')
+    ensureMap()
+    setTimeout(() => leafMap?.invalidateSize(), 300)
+  }
+}
+applyDesktopMap()
+window.addEventListener('resize', applyDesktopMap)
+
+toggleBtn.addEventListener('click', () => mapVisible ? closeMap() : openMap())
+
+// ── Quick-jump strip ───────────────────────────────────────────
+const jumpBtns = document.querySelectorAll('.quick-jump-num')
+jumpBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = document.getElementById(btn.dataset.target)
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+})
+
+// ── Scroll ↔ map sync via IntersectionObserver ─────────────────
+if (entries.length && 'IntersectionObserver' in window) {
+  let activeRank = null
+  const observer = new IntersectionObserver(records => {
+    for (const rec of records) {
+      if (!rec.isIntersecting) continue
+      const rank = parseInt(rec.target.dataset.entryRank)
+      const id   = rec.target.dataset.entryId
+      if (rank === activeRank) continue
+      activeRank = rank
+      // Highlight quick-jump chip
+      jumpBtns.forEach(b => b.classList.toggle('active', b.dataset.target === `entry-${rank}`))
+      // Sync map pin
+      if (mapInited && id) { highlightMarker(id); panToMarker(id) }
+    }
+  }, { threshold: 0.35, rootMargin: '-104px 0px 0px 0px' })
+
+  document.querySelectorAll('.guide-entry').forEach(el => observer.observe(el))
+}
+
+// ── Live data overlay from Collections+ ───────────────────────
+const COLLECTIONS_URL = '{{ site.collectionsApiUrl }}'
+async function overlayCollectionsData() {
+  try {
+    const cached = sessionStorage.getItem('sc_collection')
+    const collection = cached ? JSON.parse(cached) : await (async () => {
+      const res = await fetch(COLLECTIONS_URL)
+      if (!res.ok) return null
+      const data = await res.json()
+      sessionStorage.setItem('sc_collection', JSON.stringify(data))
+      return data
+    })()
+    if (!collection) return
+
+    document.querySelectorAll('.guide-entry[data-entry-id]').forEach(el => {
+      const yelpId = el.dataset.entryId
+      const biz = collection.find(b => b.id === yelpId || b.alias === yelpId)
+      if (!biz) return
+
+      // Rating
+      if (biz.rating) {
+        const ratingEl = el.querySelector('.rating')
+        if (ratingEl) ratingEl.textContent = `★ ${biz.rating} (${biz.review_count})`
+        else {
+          const meta = el.querySelector('.entry-meta')
+          if (meta) meta.insertAdjacentHTML('beforeend',
+            `<span class="sep">·</span><span class="rating">★ ${biz.rating}</span>`)
+        }
+      }
+      // Price
+      if (biz.price) {
+        const priceEl = el.querySelector('.price')
+        if (priceEl) priceEl.textContent = biz.price
+      }
+      // Image fallback
+      if (biz.image_url && !el.querySelector('.entry-photo')) {
+        const nameEl = el.querySelector('.entry-name')
+        if (nameEl) nameEl.insertAdjacentHTML('afterend',
+          `<img class="entry-photo" src="${biz.image_url}" alt="" loading="lazy">`)
+      }
+      // Open now
+      const isOpen = biz.hours?.[0]?.is_open_now
+      if (isOpen === true || isOpen === false) {
+        const meta = el.querySelector('.entry-meta')
+        if (meta) meta.insertAdjacentHTML('beforeend',
+          `<span class="sep">·</span><span class="${isOpen ? 'open-now' : 'closed-now'}">${isOpen ? 'Open now' : 'Closed now'}</span>`)
+      }
+    })
+  } catch(e) { /* silently skip */ }
+}
+
+if (document.querySelector('[data-entry-id]')) overlayCollectionsData()
+</script>
+{% endblock %}

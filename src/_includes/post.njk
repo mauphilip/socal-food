@@ -1,0 +1,78 @@
+{% extends "base.njk" %}
+
+{% block content %}
+
+<!-- Hero -->
+{% if hero %}
+<div class="hero">
+  <img class="hero-img short" src="{{ hero }}" alt="{{ title }}">
+  <div class="hero-overlay"></div>
+  <div class="hero-text">
+    <div class="hero-eyebrow">
+      <span>{{ city | cityLabel }}</span>
+      <span>·</span>
+      <span>{{ date | readableDate }}</span>
+    </div>
+    <h1 class="hero-title">{{ title }}</h1>
+  </div>
+</div>
+{% endif %}
+
+<div class="post-wrap">
+
+  {% if not hero %}
+  <div class="post-header">
+    <div class="post-eyebrow">
+      <span>{{ city | cityLabel }}</span>
+      <span>·</span>
+      <span>{{ date | readableDate }}</span>
+    </div>
+    <h1 class="post-title">{{ title }}</h1>
+    {% if lede %}<p class="post-lede">{{ lede }}</p>{% endif %}
+    <p class="post-meta">By {{ author or site.author }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Structured spots -->
+  {% if spots %}
+    {% for spot in spots %}
+    <div class="spot-entry">
+      {% if spot.photo %}
+      <img class="spot-entry-img" src="{{ spot.photo }}" alt="{{ spot.name }}" loading="lazy">
+      {% endif %}
+      <div class="spot-entry-body">
+        <h2 class="spot-entry-name">
+          {% if spot.yelp_url %}
+          <a href="{{ spot.yelp_url }}" target="_blank" rel="noopener">{{ spot.name }}</a>
+          {% else %}{{ spot.name }}{% endif %}
+        </h2>
+        <div class="spot-entry-meta">
+          {% if spot.neighborhood %}<span>{{ spot.neighborhood }}</span>{% endif %}
+          {% if spot.price %}<span>·</span><span>{{ spot.price }}</span>{% endif %}
+          {% if spot.category %}<span>·</span><span>{{ spot.category }}</span>{% endif %}
+          {% if spot.address %}
+          <span>·</span>
+          <a href="https://www.google.com/maps/dir/?api=1&destination={{ spot.address | urlencode }}" target="_blank" rel="noopener">📍 Directions</a>
+          {% endif %}
+        </div>
+        {% if spot.get_the %}
+        <div class="spot-entry-get">Get the: {{ spot.get_the }}</div>
+        {% endif %}
+        {% if spot.blurb %}
+        <p class="spot-entry-blurb">{{ spot.blurb }}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Freeform markdown body -->
+  {% if content %}
+  <div class="feature-body" style="margin-top: {% if spots %}2rem{% else %}0{% endif %};">
+    {{ content | safe }}
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

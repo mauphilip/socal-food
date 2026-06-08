@@ -1,0 +1,45 @@
+---
+title: Los Angeles
+city: la
+layout: base.njk
+---
+
+<div class="home-section">
+  <div class="home-section-title">LA Guides</div>
+  {% if collections.la_guides.length %}
+  <div class="content-grid">
+    {% for post in collections.la_guides %}
+    <a class="content-card" href="{{ post.url }}">
+      {% if post.data.hero %}<img class="content-card-img" src="{{ post.data.hero }}" alt="{{ post.data.title }}">{% endif %}
+      <div class="content-card-body">
+        <div class="content-card-eyebrow">Guide · {{ post.date | readableDate }}</div>
+        <div class="content-card-title">{{ post.data.title }}</div>
+        {% if post.data.lede %}<div class="content-card-lede">{{ post.data.lede }}</div>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:var(--text-muted);font-size:.9rem;">No guides yet — check back soon.</p>
+  {% endif %}
+</div>
+
+<div class="home-section">
+  <div class="home-section-title">LA Posts</div>
+  {% if collections.la_posts.length %}
+  <div class="content-grid">
+    {% for post in collections.la_posts %}
+    <a class="content-card" href="{{ post.url }}">
+      {% if post.data.hero %}<img class="content-card-img" src="{{ post.data.hero }}" alt="{{ post.data.title }}">{% endif %}
+      <div class="content-card-body">
+        <div class="content-card-eyebrow">{{ post.date | readableDate }}</div>
+        <div class="content-card-title">{{ post.data.title }}</div>
+        {% if post.data.lede %}<div class="content-card-lede">{{ post.data.lede }}</div>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:var(--text-muted);font-size:.9rem;">No posts yet.</p>
+  {% endif %}
+</div>

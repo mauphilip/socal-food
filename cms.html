@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CMS — socal.food</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/blog.css">
+  <style>
+    body { max-width: 780px; margin: 0 auto; padding: 2rem 1.25rem 6rem; }
+    .cms-header { display:flex; align-items:center; gap:1rem; margin-bottom:2rem; }
+    .cms-title { font-size:1.4rem; font-weight:900; letter-spacing:-.04em; }
+    .cms-section { margin-bottom:2rem; }
+    .cms-section-title { font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--text-subtle); margin-bottom:.75rem; }
+    .field-group { display:flex; flex-direction:column; gap:.35rem; margin-bottom:.85rem; }
+    .field-label { font-size:.78rem; font-weight:700; color:var(--text-muted); }
+    .field-input { width:100%; padding:.5rem .7rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font); font-size:.88rem; background:var(--bg); color:var(--text); box-sizing:border-box; }
+    .field-input:focus { outline:none; border-color:var(--blue); }
+    textarea.field-input { resize:vertical; min-height:80px; }
+    .spot-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:.75rem; }
+    .spot-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; font-size:.82rem; font-weight:700; }
+    .template-tabs { display:flex; gap:.35rem; margin-bottom:1.5rem; }
+    .template-tab { padding:.4rem .9rem; border-radius:var(--radius-sm); border:1.5px solid var(--border); font-size:.82rem; font-weight:700; cursor:pointer; background:var(--bg); color:var(--text-muted); font-family:var(--font); }
+    .template-tab.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+    #section-guide, #section-post, #section-entries { }
+    .cms-actions { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:2rem; }
+    #status-msg { font-size:.82rem; font-weight:600; padding:.5rem .75rem; border-radius:var(--radius-sm); display:none; }
+    #status-msg.ok { background:#d3f9d8; color:#2b6e38; display:block; }
+    #status-msg.err { background:#ffe0e0; color:#c0392b; display:block; }
+    .posts-list { display:flex; flex-direction:column; gap:.5rem; margin-top:1rem; }
+    .post-row { display:flex; align-items:center; gap:.75rem; padding:.6rem .75rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; transition:background .1s; }
+    .post-row:hover { background:var(--blue-light); }
+    .post-row-title { font-size:.88rem; font-weight:700; flex:1; }
+    .post-row-meta { font-size:.72rem; color:var(--text-subtle); }
+  </style>
+</head>
+<body>
+
+<!-- Login gate -->
+<div id="gate" style="max-width:360px;margin:4rem auto;text-align:center;">
+  <div style="font-size:1.5rem;font-weight:900;letter-spacing:-.04em;margin-bottom:1.5rem;">socal<span style="color:var(--blue)">.food</span> CMS</div>
+  <input id="pw-input" class="field-input" type="password" placeholder="Password" style="margin-bottom:.75rem;">
+  <button id="pw-btn" class="btn-primary" style="width:100%;">Enter</button>
+  <p id="pw-err" style="color:var(--red);font-size:.82rem;margin-top:.5rem;display:none;">Incorrect password</p>
+</div>
+
+<!-- CMS main (hidden until auth) -->
+<div id="cms-main" style="display:none;">
+
+  <div class="cms-header">
+    <div class="cms-title">socal<span style="color:var(--blue)">.food</span> CMS</div>
+    <button class="btn-sm" id="btn-new">+ New post</button>
+    <button class="btn-sm" id="btn-dark" style="margin-left:auto;">Dark</button>
+  </div>
+
+  <!-- Saved posts list -->
+  <div id="posts-panel">
+    <div class="cms-section-title">Saved posts</div>
+    <div id="posts-list" class="posts-list"></div>
+  </div>
+
+  <!-- Editor -->
+  <div id="editor-panel" style="display:none;">
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;">
+      <button class="btn-sm" id="btn-back">← Back</button>
+      <div style="font-size:.88rem;font-weight:700;color:var(--text-muted);" id="editor-subtitle">New post</div>
+    </div>
+
+    <!-- Template selector -->
+    <div class="cms-section">
+      <div class="cms-section-title">Template</div>
+      <div class="template-tabs">
+        <button class="template-tab active" data-tpl="guide">Guide (ranked list)</button>
+        <button class="template-tab" data-tpl="post">Post (places to try)</button>
+        <button class="template-tab" data-tpl="feature">Feature (essay)</button>
+      </div>
+    </div>
+
+    <!-- Common fields -->
+    <div class="cms-section">
+      <div class="cms-section-title">Info</div>
+      <div class="field-group">
+        <label class="field-label">Title</label>
+        <input id="f-title" class="field-input" type="text" placeholder="The Best KBBQ in Los Angeles">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div class="field-group">
+          <label class="field-label">City</label>
+          <select id="f-city" class="field-input">
+            <option value="la">Los Angeles</option>
+            <option value="oc">Orange County</option>
+            <option value="sd">San Diego</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Date</label>
+          <input id="f-date" class="field-input" type="date">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Lede (one-sentence hook)</label>
+        <input id="f-lede" class="field-input" type="text" placeholder="Short description shown in cards and meta.">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Hero image URL</label>
+        <input id="f-hero" class="field-input" type="url" placeholder="https://...">
+      </div>
+    </div>
+
+    <!-- Guide-specific: entries -->
+    <div id="section-guide" class="cms-section">
+      <div class="cms-section-title">Guide entries</div>
+      <div id="entries-list"></div>
+      <button class="btn-sm" id="btn-add-entry" style="margin-top:.25rem;">+ Add entry</button>
+    </div>
+
+    <!-- Post-specific: spots -->
+    <div id="section-post" class="cms-section" style="display:none;">
+      <div class="cms-section-title">Spots</div>
+      <div id="spots-list"></div>
+      <button class="btn-sm" id="btn-add-spot" style="margin-top:.25rem;">+ Add spot</button>
+    </div>
+
+    <!-- Feature body -->
+    <div id="section-feature" class="cms-section" style="display:none;">
+      <div class="cms-section-title">Body (Markdown)</div>
+      <textarea id="f-body" class="field-input" rows="16" placeholder="Write your piece in Markdown..."></textarea>
+    </div>
+
+    <!-- Actions -->
+    <div class="cms-actions">
+      <button class="btn-primary" id="btn-save">Save draft</button>
+      <button class="btn-primary" id="btn-publish" style="background:var(--green);">Publish &amp; rebuild</button>
+      <button class="btn-sm danger" id="btn-delete" style="display:none;">Delete</button>
+    </div>
+    <div id="status-msg"></div>
+
+  </div><!-- /editor-panel -->
+</div><!-- /cms-main -->
+
+<script>
+// ── Auth ──────────────────────────────────────────────────────
+const CMS_PASSWORD = '1990'
+const KV_BASE = '/api/cms'
+
+if (localStorage.getItem('sc_cms_auth')) showCMS()
+
+document.getElementById('pw-btn').addEventListener('click', () => {
+  if (document.getElementById('pw-input').value === CMS_PASSWORD) {
+    localStorage.setItem('sc_cms_auth', '1')
+    showCMS()
+  } else {
+    document.getElementById('pw-err').style.display = 'block'
+    document.getElementById('pw-input').value = ''
+  }
+})
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('pw-btn').click()
+})
+
+function showCMS() {
+  document.getElementById('gate').style.display = 'none'
+  document.getElementById('cms-main').style.display = 'block'
+  loadPosts()
+}
+
+// ── Dark mode ─────────────────────────────────────────────────
+const _dt = document.getElementById('btn-dark')
+function _applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+  _dt.textContent = dark ? 'Light' : 'Dark'
+}
+const _saved = localStorage.getItem('yc_theme')
+_applyTheme(_saved ? _saved === 'dark' : false)
+_dt.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  _applyTheme(!isDark)
+  localStorage.setItem('yc_theme', isDark ? 'light' : 'dark')
+})
+
+// ── State ─────────────────────────────────────────────────────
+let currentTpl = 'guide'
+let currentId = null
+let posts = []
+
+// ── Template switching ────────────────────────────────────────
+document.querySelectorAll('.template-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentTpl = btn.dataset.tpl
+    document.querySelectorAll('.template-tab').forEach(b => b.classList.toggle('active', b === btn))
+    document.getElementById('section-guide').style.display = currentTpl === 'guide' ? '' : 'none'
+    document.getElementById('section-post').style.display  = currentTpl === 'post'  ? '' : 'none'
+    document.getElementById('section-feature').style.display = currentTpl === 'feature' ? '' : 'none'
+  })
+})
+
+// ── Posts list ────────────────────────────────────────────────
+async function loadPosts() {
+  try {
+    const r = await fetch(KV_BASE + '?action=list')
+    if (r.ok) posts = await r.json()
+  } catch { posts = JSON.parse(localStorage.getItem('sc_cms_posts') || '[]') }
+  renderPostsList()
+}
+
+function renderPostsList() {
+  const el = document.getElementById('posts-list')
+  if (!posts.length) { el.innerHTML = '<p style="font-size:.82rem;color:var(--text-muted);">No posts yet. Click "+ New post" to start.</p>'; return }
+  el.innerHTML = posts.map((p, i) => `
+    <div class="post-row" data-idx="${i}">
+      <span class="post-row-title">${p.title || '(untitled)'}</span>
+      <span class="post-row-meta">${p.city?.toUpperCase() || ''} · ${p.template || 'guide'} · ${p.date || ''}</span>
+    </div>`).join('')
+  el.querySelectorAll('.post-row').forEach(row => {
+    row.addEventListener('click', () => loadEditor(posts[parseInt(row.dataset.idx)]))
+  })
+}
+
+// ── Editor ────────────────────────────────────────────────────
+document.getElementById('btn-new').addEventListener('click', () => {
+  currentId = null
+  loadEditor({ template: 'guide', date: new Date().toISOString().slice(0,10), city: 'la', entries: [], spots: [] })
+})
+document.getElementById('btn-back').addEventListener('click', () => {
+  document.getElementById('editor-panel').style.display = 'none'
+  document.getElementById('posts-panel').style.display = ''
+})
+
+function loadEditor(post) {
+  currentId = post.id || null
+  currentTpl = post.template || 'guide'
+  document.getElementById('editor-panel').style.display = ''
+  document.getElementById('posts-panel').style.display = 'none'
+  document.getElementById('editor-subtitle').textContent = post.title || 'New post'
+  document.getElementById('btn-delete').style.display = currentId ? '' : 'none'
+
+  // Fill fields
+  document.getElementById('f-title').value  = post.title || ''
+  document.getElementById('f-city').value   = post.city || 'la'
+  document.getElementById('f-date').value   = post.date || new Date().toISOString().slice(0,10)
+  document.getElementById('f-lede').value   = post.lede || ''
+  document.getElementById('f-hero').value   = post.hero || ''
+  document.getElementById('f-body').value   = post.body || ''
+
+  // Set template
+  document.querySelectorAll('.template-tab').forEach(b => b.classList.toggle('active', b.dataset.tpl === currentTpl))
+  document.getElementById('section-guide').style.display   = currentTpl === 'guide' ? '' : 'none'
+  document.getElementById('section-post').style.display    = currentTpl === 'post'  ? '' : 'none'
+  document.getElementById('section-feature').style.display = currentTpl === 'feature' ? '' : 'none'
+
+  renderEntries(post.entries || [])
+  renderSpots(post.spots || [])
+  document.getElementById('status-msg').style.display = 'none'
+}
+
+// ── Entry builder (Guide) ─────────────────────────────────────
+function entryHTML(e, i) {
+  return `<div class="spot-card" data-entry="${i}">
+    <div class="spot-card-header">#${(e.rank||i+1)} <button class="btn-sm danger" data-rm-entry="${i}">Remove</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+      <div class="field-group"><label class="field-label">Name</label><input class="field-input e-name" value="${esc(e.name||'')}" placeholder="Restaurant name"></div>
+      <div class="field-group"><label class="field-label">Rank</label><input class="field-input e-rank" type="number" value="${e.rank||i+1}" min="1"></div>
+      <div class="field-group"><label class="field-label">Yelp ID (alias)</label><input class="field-input e-yelp" value="${esc(e.yelp_id||'')}" placeholder="place-name-los-angeles"></div>
+      <div class="field-group"><label class="field-label">Neighborhood</label><input class="field-input e-hood" value="${esc(e.neighborhood||'')}" placeholder="Koreatown"></div>
+      <div class="field-group"><label class="field-label">Price</label><input class="field-input e-price" value="${esc(e.price||'')}" placeholder="$$"></div>
+      <div class="field-group"><label class="field-label">Category</label><input class="field-input e-cat" value="${esc(e.category||'')}" placeholder="Korean BBQ"></div>
+      <div class="field-group"><label class="field-label">Lat</label><input class="field-input e-lat" type="number" step="any" value="${e.lat||''}"></div>
+      <div class="field-group"><label class="field-label">Lng</label><input class="field-input e-lng" type="number" step="any" value="${e.lng||''}"></div>
+    </div>
+    <div class="field-group"><label class="field-label">Address</label><input class="field-input e-addr" value="${esc(e.address||'')}" placeholder="123 Main St, Los Angeles, CA"></div>
+    <div class="field-group"><label class="field-label">Hero image URL</label><input class="field-input e-img" value="${esc(e.hero_image||'')}" placeholder="https://..."></div>
+    <div class="field-group"><label class="field-label">Perfect for (comma-separated)</label><input class="field-input e-pfor" value="${esc((e.perfect_for||[]).join(', '))}" placeholder="date night, groups"></div>
+    <div class="field-group"><label class="field-label">Must order (comma-separated)</label><input class="field-input e-must" value="${esc((e.must_order||[]).join(', '))}" placeholder="Short Rib, Brisket"></div>
+    <div class="field-group"><label class="field-label">Review</label><textarea class="field-input e-review" rows="3" placeholder="3–4 opinionated sentences...">${esc(e.review||'')}</textarea></div>
+  </div>`
+}
+
+function renderEntries(entries) {
+  const el = document.getElementById('entries-list')
+  el.innerHTML = entries.map((e,i) => entryHTML(e,i)).join('')
+  el.querySelectorAll('[data-rm-entry]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.spot-card').remove()
+    })
+  })
+}
+
+document.getElementById('btn-add-entry').addEventListener('click', () => {
+  const list = document.getElementById('entries-list')
+  const count = list.querySelectorAll('.spot-card').length
+  const div = document.createElement('div')
+  div.innerHTML = entryHTML({ rank: count + 1 }, count)
+  const card = div.firstElementChild
+  list.appendChild(card)
+  card.querySelector('[data-rm-entry]').addEventListener('click', () => card.remove())
+})
+
+// ── Spot builder (Post) ───────────────────────────────────────
+function spotHTML(s, i) {
+  return `<div class="spot-card" data-spot="${i}">
+    <div class="spot-card-header">Spot ${i+1} <button class="btn-sm danger" data-rm-spot="${i}">Remove</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+      <div class="field-group"><label class="field-label">Name</label><input class="field-input s-name" value="${esc(s.name||'')}" placeholder="Restaurant"></div>
+      <div class="field-group"><label class="field-label">Yelp ID</label><input class="field-input s-yelp" value="${esc(s.yelp_id||'')}" placeholder="place-name-la"></div>
+      <div class="field-group"><label class="field-label">Neighborhood</label><input class="field-input s-hood" value="${esc(s.neighborhood||'')}"></div>
+      <div class="field-group"><label class="field-label">Price</label><input class="field-input s-price" value="${esc(s.price||'')}" placeholder="$$"></div>
+    </div>
+    <div class="field-group"><label class="field-label">Address</label><input class="field-input s-addr" value="${esc(s.address||'')}"></div>
+    <div class="field-group"><label class="field-label">Photo URL</label><input class="field-input s-photo" value="${esc(s.photo||'')}" placeholder="https://..."></div>
+    <div class="field-group"><label class="field-label">Get the…</label><input class="field-input s-get" value="${esc(s.get_the||'')}" placeholder="Spicy Short Rib"></div>
+    <div class="field-group"><label class="field-label">Blurb (2–3 sentences)</label><textarea class="field-input s-blurb" rows="3" placeholder="Why go, what to order.">${esc(s.blurb||'')}</textarea></div>
+  </div>`
+}
+
+function renderSpots(spots) {
+  const el = document.getElementById('spots-list')
+  el.innerHTML = spots.map((s,i) => spotHTML(s,i)).join('')
+  el.querySelectorAll('[data-rm-spot]').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('.spot-card').remove())
+  })
+}
+
+document.getElementById('btn-add-spot').addEventListener('click', () => {
+  const list = document.getElementById('spots-list')
+  const count = list.querySelectorAll('.spot-card').length
+  const div = document.createElement('div')
+  div.innerHTML = spotHTML({}, count)
+  const card = div.firstElementChild
+  list.appendChild(card)
+  card.querySelector('[data-rm-spot]').addEventListener('click', () => card.remove())
+})
+
+// ── Collect form data ─────────────────────────────────────────
+function collectPost() {
+  const post = {
+    id: currentId || ('post_' + Date.now()),
+    template: currentTpl,
+    title: document.getElementById('f-title').value.trim(),
+    city: document.getElementById('f-city').value,
+    date: document.getElementById('f-date').value,
+    lede: document.getElementById('f-lede').value.trim(),
+    hero: document.getElementById('f-hero').value.trim(),
+    body: document.getElementById('f-body').value,
+  }
+  if (currentTpl === 'guide') {
+    post.entries = [...document.querySelectorAll('#entries-list .spot-card')].map(card => ({
+      rank:       parseInt(card.querySelector('.e-rank')?.value) || 1,
+      name:       card.querySelector('.e-name')?.value.trim() || '',
+      yelp_id:    card.querySelector('.e-yelp')?.value.trim() || '',
+      neighborhood: card.querySelector('.e-hood')?.value.trim() || '',
+      price:      card.querySelector('.e-price')?.value.trim() || '',
+      category:   card.querySelector('.e-cat')?.value.trim() || '',
+      lat:        parseFloat(card.querySelector('.e-lat')?.value) || null,
+      lng:        parseFloat(card.querySelector('.e-lng')?.value) || null,
+      address:    card.querySelector('.e-addr')?.value.trim() || '',
+      hero_image: card.querySelector('.e-img')?.value.trim() || '',
+      perfect_for: card.querySelector('.e-pfor')?.value.split(',').map(s=>s.trim()).filter(Boolean),
+      must_order:  card.querySelector('.e-must')?.value.split(',').map(s=>s.trim()).filter(Boolean),
+      review:      card.querySelector('.e-review')?.value.trim() || '',
+    }))
+  }
+  if (currentTpl === 'post') {
+    post.spots = [...document.querySelectorAll('#spots-list .spot-card')].map(card => ({
+      name:        card.querySelector('.s-name')?.value.trim() || '',
+      yelp_id:     card.querySelector('.s-yelp')?.value.trim() || '',
+      neighborhood: card.querySelector('.s-hood')?.value.trim() || '',
+      price:       card.querySelector('.s-price')?.value.trim() || '',
+      address:     card.querySelector('.s-addr')?.value.trim() || '',
+      photo:       card.querySelector('.s-photo')?.value.trim() || '',
+      get_the:     card.querySelector('.s-get')?.value.trim() || '',
+      blurb:       card.querySelector('.s-blurb')?.value.trim() || '',
+    }))
+  }
+  return post
+}
+
+// ── Save / Publish ────────────────────────────────────────────
+function setStatus(msg, type) {
+  const el = document.getElementById('status-msg')
+  el.textContent = msg; el.className = type; el.style.display = 'block'
+}
+
+async function savePost(publish = false) {
+  const post = collectPost()
+  currentId = post.id
+
+  // Save to KV (falls back to localStorage if API unavailable)
+  try {
+    const r = await fetch(KV_BASE, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: publish ? 'publish' : 'save', post })
+    })
+    if (!r.ok) throw new Error(await r.text())
+    const result = await r.json()
+    setStatus(publish ? '✓ Published! Site is rebuilding (~10s).' : '✓ Draft saved.', 'ok')
+    if (result.posts) posts = result.posts
+  } catch {
+    // Fallback: localStorage only
+    const stored = JSON.parse(localStorage.getItem('sc_cms_posts') || '[]')
+    const idx = stored.findIndex(p => p.id === post.id)
+    if (idx >= 0) stored[idx] = post; else stored.unshift(post)
+    localStorage.setItem('sc_cms_posts', JSON.stringify(stored))
+    posts = stored
+    setStatus(publish ? '✓ Saved locally (deploy API unavailable — push manually).' : '✓ Saved locally.', 'ok')
+  }
+
+  document.getElementById('editor-subtitle').textContent = post.title || 'New post'
+  document.getElementById('btn-delete').style.display = ''
+  renderPostsList()
+}
+
+document.getElementById('btn-save').addEventListener('click', () => savePost(false))
+document.getElementById('btn-publish').addEventListener('click', () => savePost(true))
+
+document.getElementById('btn-delete').addEventListener('click', async () => {
+  if (!confirm('Delete this post?')) return
+  posts = posts.filter(p => p.id !== currentId)
+  localStorage.setItem('sc_cms_posts', JSON.stringify(posts))
+  try { await fetch(KV_BASE, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'delete', id: currentId }) }) } catch {}
+  currentId = null
+  document.getElementById('editor-panel').style.display = 'none'
+  document.getElementById('posts-panel').style.display = ''
+  renderPostsList()
+})
+
+// ── Util ──────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;') }
+</script>
+
+</body>
+</html>

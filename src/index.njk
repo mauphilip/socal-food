@@ -1,0 +1,67 @@
+---
+title: Home
+layout: base.njk
+---
+
+{% set featured = collections.la_guides[0] %}
+{% set recentGuides = collections.la_guides | slice(0, 4) %}
+{% set recentPosts = collections.la_posts | slice(0, 6) %}
+
+<!-- Featured guide -->
+{% if featured %}
+<div class="home-section">
+  <div class="home-section-title">Featured</div>
+  <a class="content-card featured" href="{{ featured.url }}">
+    {% if featured.data.hero %}
+    <img class="content-card-img tall" src="{{ featured.data.hero }}" alt="{{ featured.data.title }}">
+    {% endif %}
+    <div class="content-card-body">
+      <div class="content-card-eyebrow">{{ featured.data.city | cityLabel }} · Guide</div>
+      <div class="content-card-title">{{ featured.data.title }}</div>
+      {% if featured.data.lede %}<div class="content-card-lede">{{ featured.data.lede }}</div>{% endif %}
+      <div class="content-card-meta">{{ featured.date | readableDate }} · By {{ featured.data.author or site.author }}</div>
+    </div>
+  </a>
+</div>
+{% endif %}
+
+<!-- Recent guides -->
+{% if recentGuides.length > 1 %}
+<div class="home-section">
+  <div class="home-section-title">Guides</div>
+  <div class="content-grid">
+    {% for post in recentGuides %}
+    {% if not loop.first %}
+    <a class="content-card" href="{{ post.url }}">
+      {% if post.data.hero %}<img class="content-card-img" src="{{ post.data.hero }}" alt="{{ post.data.title }}">{% endif %}
+      <div class="content-card-body">
+        <div class="content-card-eyebrow">{{ post.data.city | cityLabel }} · Guide</div>
+        <div class="content-card-title">{{ post.data.title }}</div>
+        {% if post.data.lede %}<div class="content-card-lede">{{ post.data.lede }}</div>{% endif %}
+        <div class="content-card-meta">{{ post.date | readableDate }}</div>
+      </div>
+    </a>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Recent posts -->
+{% if recentPosts.length %}
+<div class="home-section">
+  <div class="home-section-title">Posts</div>
+  <div class="content-grid">
+    {% for post in recentPosts %}
+    <a class="content-card" href="{{ post.url }}">
+      {% if post.data.hero %}<img class="content-card-img" src="{{ post.data.hero }}" alt="{{ post.data.title }}">{% endif %}
+      <div class="content-card-body">
+        <div class="content-card-eyebrow">{{ post.data.city | cityLabel }} · {{ post.date | readableDate }}</div>
+        <div class="content-card-title">{{ post.data.title }}</div>
+        {% if post.data.lede %}<div class="content-card-lede">{{ post.data.lede }}</div>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

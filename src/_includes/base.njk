@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if title %}{{ title }} — {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ lede or description or site.description }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/blog.css">
+  {% if useLeaflet %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  {% endif %}
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="site-wrap">
+
+  <!-- ── Nav ── -->
+  <nav class="site-nav">
+    <a class="site-nav-logo" href="/">socal<span>.food</span></a>
+    <div class="site-nav-cities">
+      {% for c in site.cities %}
+      <a class="site-nav-city{% if city == c.slug %} active{% endif %}" href="/{{ c.slug }}/">{{ c.label }}</a>
+      {% endfor %}
+    </div>
+    <div class="site-nav-right">
+      <button class="site-nav-btn" id="dark-toggle">Dark</button>
+    </div>
+  </nav>
+
+  <!-- ── Content ── -->
+  <main class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    © {{ site.title }} · Powered by <a href="https://www.yelp.com" target="_blank" rel="noopener">Yelp</a>
+  </footer>
+
+</div>
+
+<script>
+// Dark mode
+const _dt = document.getElementById('dark-toggle')
+function _applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+  _dt.textContent = dark ? 'Light' : 'Dark'
+}
+const _saved = localStorage.getItem('yc_theme')
+_applyTheme(_saved ? _saved === 'dark' : false)
+_dt.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  _applyTheme(!isDark)
+  localStorage.setItem('yc_theme', isDark ? 'light' : 'dark')
+})
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
