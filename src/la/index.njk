@@ -1,9 +1,10 @@
 ---
 title: Los Angeles
 city: la
-layout: base.njk
 ---
+{% extends "base.njk" %}
 
+{% block content %}
 <div class="home-section">
   <div class="home-section-title">LA Guides</div>
   {% if collections.la_guides.length %}
@@ -43,3 +44,4 @@ layout: base.njk
   <p style="color:var(--text-muted);font-size:.9rem;">No posts yet.</p>
   {% endif %}
 </div>
+{% endblock %}

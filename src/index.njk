@@ -1,8 +1,6 @@
----
-title: Home
-layout: base.njk
----
+{% extends "base.njk" %}
 
+{% block content %}
 {% set featured = collections.la_guides[0] %}
 {% set recentGuides = collections.la_guides | slice(0, 4) %}
 {% set recentPosts = collections.la_posts | slice(0, 6) %}
@@ -65,3 +63,4 @@ layout: base.njk
   </div>
 </div>
 {% endif %}
+{% endblock %}
